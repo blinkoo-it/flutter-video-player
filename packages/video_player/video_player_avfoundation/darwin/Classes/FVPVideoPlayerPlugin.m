@@ -314,9 +314,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       }
     }
   };
-
   _player = [avFactory playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+  // this asks to the player to start playing the video asap
+  _player.automaticallyWaitsToMinimizeStalling = false;
 
   // This is to fix 2 bugs: 1. blank video for encrypted video streams on iOS 16
   // (https://github.com/flutter/flutter/issues/111457) and 2. swapped width and height for some
@@ -864,5 +865,17 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   }
 #endif
 }
+
+- (void)setBufferWindow:(nonnull FVPSetBufferWindowMessage *)msg error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error { 
+    FVPVideoPlayer *player = self.playersByTextureId[@(msg.textureId)];
+    player.player.currentItem.preferredForwardBufferDuration = msg.seconds;
+}
+
+
+- (void)setMaxResolution:(nonnull FVPSetMaxResolutionMessage *)msg error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error { 
+    FVPVideoPlayer *player = self.playersByTextureId[@(msg.textureId)];
+    player.player.currentItem.preferredMaximumResolution = CGSizeMake(msg.width, msg.height);
+}
+
 
 @end

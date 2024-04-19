@@ -56,6 +56,24 @@ class MixWithOthersMessage {
   bool mixWithOthers;
 }
 
+class GetMaxInstancesMessage {
+  GetMaxInstancesMessage(this.mediaType);
+  String mediaType;
+}
+
+class SetMaxResolutionMessage {
+  SetMaxResolutionMessage(this.textureId, this.width, this.height);
+  int textureId;
+  int width;
+  int height;
+}
+
+class SetBufferWindowMessage {
+  SetBufferWindowMessage(this.textureId, this.seconds);
+  int textureId;
+  int? seconds;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AndroidVideoPlayerApi {
   void initialize();
@@ -69,4 +87,7 @@ abstract class AndroidVideoPlayerApi {
   void seekTo(PositionMessage msg);
   void pause(TextureMessage msg);
   void setMixWithOthers(MixWithOthersMessage msg);
+  int getMaxInstances(GetMaxInstancesMessage msg);
+  void setMaxResolution(SetMaxResolutionMessage msg);
+  void setBufferWindow(SetBufferWindowMessage msg);
 }

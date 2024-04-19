@@ -9,10 +9,14 @@ import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.view.Surface;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
@@ -21,6 +25,8 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.Listener;
 import com.google.android.exoplayer2.audio.AudioAttributes;
+import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
+import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
@@ -28,10 +34,18 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.BaseTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.MediaCodecVideoRenderer;
+
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
 import java.util.Arrays;
@@ -64,6 +78,8 @@ final class VideoPlayer {
 
   private DefaultHttpDataSource.Factory httpDataSourceFactory = new DefaultHttpDataSource.Factory();
 
+  private DynamicLoadControl loadControl;
+
   VideoPlayer(
       Context context,
       EventChannel eventChannel,
@@ -76,14 +92,25 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
 
-    ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
     Uri uri = Uri.parse(dataSource);
 
     buildHttpDataSourceFactory(httpHeaders);
-    DataSource.Factory dataSourceFactory =
-        new DefaultDataSource.Factory(context, httpDataSourceFactory);
+    DefaultBandwidthMeter bandwidthMeter = DefaultBandwidthMeter.getSingletonInstance(context);
+    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context, httpDataSourceFactory)
+                    .setTransferListener(bandwidthMeter);
 
     MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint);
+    DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+    renderersFactory.setEnableDecoderFallback(true);
+
+    loadControl = new DynamicLoadControl();
+
+    ExoPlayer exoPlayer = new ExoPlayer.Builder(context)
+            .setBandwidthMeter(bandwidthMeter)
+            .setTrackSelector(new DefaultTrackSelector(context))
+            .setRenderersFactory(renderersFactory)
+            .setLoadControl(loadControl)
+            .build();
 
     exoPlayer.setMediaSource(mediaSource);
     exoPlayer.prepare();
@@ -294,6 +321,27 @@ final class VideoPlayer {
 
   long getPosition() {
     return exoPlayer.getCurrentPosition();
+  }
+
+  public void setMaxResolution(int width, int height) {
+    exoPlayer.setTrackSelectionParameters(
+            exoPlayer.getTrackSelectionParameters()
+                    .buildUpon()
+                    .setMaxVideoSize(width, height)
+                    .build()
+    );
+  }
+
+  public void setBufferWindow(@Nullable Long seconds) {
+   DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
+   int maxBufferMs = seconds != null ? seconds.intValue() * 1000 : DefaultLoadControl.DEFAULT_MAX_BUFFER_MS;
+   builder.setBufferDurationsMs(
+           DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+           maxBufferMs,
+           DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+           DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+   );
+   loadControl.setInternalLoadControl(builder.build());
   }
 
   @SuppressWarnings("SuspiciousNameCombination")

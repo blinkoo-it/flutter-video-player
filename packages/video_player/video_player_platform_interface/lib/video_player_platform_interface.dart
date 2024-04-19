@@ -103,9 +103,24 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     throw UnimplementedError('setMixWithOthers() has not been implemented.');
   }
 
+  /// Returns the max instances of video controller of media type specified
+  Future<int> getMaxInstances(String mediaType) {
+    throw UnimplementedError('setMixWithOthers() has not been implemented.');
+  }
+
   /// Sets additional options on web
   Future<void> setWebOptions(int textureId, VideoPlayerWebOptions options) {
     throw UnimplementedError('setWebOptions() has not been implemented.');
+  }
+
+  /// Sets the buffer dimension
+  void setBufferWindow(int textureId, int? seconds) {
+    throw UnimplementedError('setBufferWindow() has not been implemented.');
+  }
+
+  /// Sets the max resolution of the video
+  void setMaxResolution(int textureId, int width, int height) {
+    throw UnimplementedError('setBufferWindow() has not been implemented.');
   }
 }
 

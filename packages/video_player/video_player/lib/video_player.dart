@@ -388,6 +388,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   @visibleForTesting
   int get textureId => _textureId;
 
+  /// Returns the number of max video controller instances supported for the specified mediaType
+  static Future<int> getMaxInstances(String mediaType) {
+    return _videoPlayerPlatform.getMaxInstances(mediaType);
+  }
+
   /// Attempts to open the given [dataSource] and load metadata about the video.
   Future<void> initialize() async {
     final bool allowBackgroundPlayback =
@@ -757,6 +762,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (!_isDisposed) {
       super.removeListener(listener);
     }
+  }
+
+  /// Sets the buffer dimension. If not called, the default settings is used on each platform
+  ///
+  /// on iOs, if set to 0, the buffering level will be decided automatically
+  void setBufferWindow({required int? seconds}) {
+    _videoPlayerPlatform.setBufferWindow(textureId, seconds);
+  }
+
+  /// Sets the max resolution of the video
+  /// if not called, the default settings is used on each platform
+  /// on iOs, if set to 0 both width and height, there is no limit on the preferred size
+  void setMaxResolution({required int width, required int height}) {
+    _videoPlayerPlatform.setMaxResolution(textureId, width, height);
   }
 
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;

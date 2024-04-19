@@ -57,6 +57,19 @@ class MixWithOthersMessage {
   bool mixWithOthers;
 }
 
+class SetMaxResolutionMessage {
+  SetMaxResolutionMessage(this.textureId, this.width, this.height);
+  int textureId;
+  int width;
+  int height;
+}
+
+class SetBufferWindowMessage {
+  SetBufferWindowMessage(this.textureId, this.seconds);
+  int textureId;
+  int seconds;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AVFoundationVideoPlayerApi {
   @ObjCSelector('initialize')
@@ -82,4 +95,8 @@ abstract class AVFoundationVideoPlayerApi {
   void pause(TextureMessage msg);
   @ObjCSelector('setMixWithOthers:')
   void setMixWithOthers(MixWithOthersMessage msg);
+  @ObjCSelector('setMaxResolution:')
+  void setMaxResolution(SetMaxResolutionMessage msg);
+  @ObjCSelector('setBufferWindow:')
+  void setBufferWindow(SetBufferWindowMessage msg);
 }

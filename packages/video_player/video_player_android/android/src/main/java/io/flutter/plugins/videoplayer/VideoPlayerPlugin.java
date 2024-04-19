@@ -8,6 +8,11 @@ import android.content.Context;
 import android.os.Build;
 import android.util.LongSparseArray;
 import androidx.annotation.NonNull;
+
+import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
+import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
+import com.google.android.exoplayer2.util.MimeTypes;
+
 import io.flutter.FlutterInjector;
 import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -26,6 +31,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import javax.net.ssl.HttpsURLConnection;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
@@ -64,19 +71,6 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-      try {
-        HttpsURLConnection.setDefaultSSLSocketFactory(new CustomSSLSocketFactory());
-      } catch (KeyManagementException | NoSuchAlgorithmException e) {
-        Log.w(
-            TAG,
-            "Failed to enable TLSv1.1 and TLSv1.2 Protocols for API level 19 and below.\n"
-                + "For more information about Socket Security, please consult the following link:\n"
-                + "https://developer.android.com/reference/javax/net/ssl/SSLSocket",
-            e);
-      }
-    }
-
     final FlutterInjector injector = FlutterInjector.instance();
     this.flutterState =
         new FlutterState(
@@ -212,6 +206,35 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     options.mixWithOthers = arg.getMixWithOthers();
   }
 
+  @NonNull
+  @Override
+  public Long getMaxInstances(@NonNull Messages.GetMaxInstancesMessage msg) {
+    try {
+      MediaCodecInfo codec = MediaCodecUtil.getDecoderInfo(msg.getMediaType(), false, false);
+      if (codec == null) throw new RuntimeException("Codec not found");
+
+      long maxInstances = (long) codec.getMaxSupportedInstances();
+      return maxInstances;
+      // also count software decoders, but limit to 80% for safety reasons
+      // return Double.valueOf(maxInstances * 2 * 0.8).longValue();
+
+    } catch (MediaCodecUtil.DecoderQueryException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void setMaxResolution(@NonNull Messages.SetMaxResolutionMessage msg) {
+    VideoPlayer player = videoPlayers.get(msg.getTextureId());
+    player.setMaxResolution(msg.getWidth().intValue(), msg.getHeight().intValue());
+  }
+
+  @Override
+  public void setBufferWindow(@NonNull Messages.SetBufferWindowMessage msg) {
+    VideoPlayer player = videoPlayers.get(msg.getTextureId());
+    player.setBufferWindow(msg.getSeconds());
+  }
+
   private interface KeyForAssetFn {
     String get(String asset);
   }
@@ -241,11 +264,11 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     }
 
     void startListening(VideoPlayerPlugin methodCallHandler, BinaryMessenger messenger) {
-      AndroidVideoPlayerApi.setup(messenger, methodCallHandler);
+      AndroidVideoPlayerApi.setUp(messenger, methodCallHandler);
     }
 
     void stopListening(BinaryMessenger messenger) {
-      AndroidVideoPlayerApi.setup(messenger, null);
+      AndroidVideoPlayerApi.setUp(messenger, null);
     }
   }
 }

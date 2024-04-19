@@ -166,6 +166,26 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
         .setMixWithOthers(MixWithOthersMessage(mixWithOthers: mixWithOthers));
   }
 
+  @override
+  Future<int> getMaxInstances(String mediaType) {
+    return _api.getMaxInstances(GetMaxInstancesMessage(mediaType: mediaType));
+  }
+
+  @override
+  void setBufferWindow(int textureId, int? seconds) {
+    _api.setBufferWindow(
+      SetBufferWindowMessage(textureId: textureId, seconds: seconds),
+    );
+  }
+
+  @override
+  void setMaxResolution(int textureId, int width, int height) {
+    _api.setMaxResolution(
+      SetMaxResolutionMessage(
+          textureId: textureId, width: width, height: height),
+    );
+  }
+
   EventChannel _eventChannelFor(int textureId) {
     return EventChannel('flutter.io/videoPlayer/videoEvents$textureId');
   }
