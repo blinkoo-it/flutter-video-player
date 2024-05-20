@@ -146,7 +146,9 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<void> setMixWithOthers(bool mixWithOthers) {
-    return _api.setMixWithOthers(mixWithOthers);
+    return _api.setMixWithOthers(
+      MixWithOthersMessage(mixWithOthers: mixWithOthers),
+    );
   }
 
   @override
