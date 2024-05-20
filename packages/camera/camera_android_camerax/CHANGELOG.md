@@ -1,3 +1,60 @@
+## 0.6.5+2
+
+* Update to latest stable camerax `1.3.3`.
+* Updates minimum supported SDK version to Flutter 3.16/Dart 3.2.
+
+## 0.6.5+1
+
+* Updates `README.md` to reflect the fact that the `camera_android_camerax` camera plugin implementation
+  is the endorsed Android implementation for `camera: ^0.11.0`.
+
+## 0.6.5
+
+* Modifies `stopVideoRecording` to ensure that the method only returns when CameraX reports that the
+  recorded video finishes saving to a file.
+* Modifies `startVideoCapturing` to ensure that the method only returns when CameraX reports that
+  video recording has started.
+* Adds empty implementation for `setDescriptionWhileRecording` and leaves a todo to add this feature.
+
+## 0.6.4+1
+
+* Adds empty implementation for `prepareForVideoRecording` since this optimization is not used on Android.
+
+## 0.6.4
+
+* Prevents usage of unsupported concurrent `UseCase`s based on the capabiliites of the camera device.
+
+## 0.6.3
+
+* Shortens default interval that internal Java `InstanceManager` uses to release garbage collected weak references to
+  native objects.
+* Dynamically shortens interval that internal Java `InstanceManager` uses to release garbage collected weak references to
+  native objects when an `ImageAnalysis.Analyzer` is set/removed to account for increased memory usage of analyzing
+  images that may cause a crash.
+
+## 0.6.2
+
+* Adds support to control video FPS and bitrate. See `CameraController.withSettings`.
+
+## 0.6.1+1
+
+* Moves integration_test dependency to dev_dependencies.
+
+## 0.6.1
+
+* Modifies resolution selection logic to use an `AspectRatioStrategy` for all aspect ratios supported by CameraX.
+* Adds `ResolutionFilter` to resolution selection logic to prioritize resolutions that match
+  the defined `ResolutionPreset`s.
+
+## 0.6.0+1
+
+* Updates `README.md` to encourage developers to opt into this implementation of the camera plugin.
+
+## 0.6.0
+
+* Implements `setFocusMode`, which makes this plugin reach feature parity with camera_android.
+* Fixes `setExposureCompensationIndex` return value to use index returned by CameraX.
+
 ## 0.5.0+36
 
 * Implements `setExposureMode`.

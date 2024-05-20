@@ -68,6 +68,7 @@ Future<int> generateTestPigeons({required String baseDir}) async {
     'null_fields',
     'nullable_returns',
     'primitive',
+    'proxy_api_tests',
   ];
 
   final String outputBase = p.join(baseDir, 'platform_tests', 'test_plugin');
@@ -88,6 +89,11 @@ Future<int> generateTestPigeons({required String baseDir}) async {
         ? 'FlutterError'
         : '${pascalCaseName}Error';
 
+    final bool swiftErrorUseDefaultErrorName = input == 'core_tests';
+
+    final String? swiftErrorClassName =
+        swiftErrorUseDefaultErrorName ? null : '${pascalCaseName}Error';
+
     // Generate the default language test plugin output.
     int generateCode = await runPigeon(
       input: './pigeons/$input.dart',
@@ -103,6 +109,7 @@ Future<int> generateTestPigeons({required String baseDir}) async {
       swiftOut: skipLanguages.contains(GeneratorLanguage.swift)
           ? null
           : '$outputBase/ios/Classes/$pascalCaseName.gen.swift',
+      swiftErrorClassName: swiftErrorClassName,
       // Windows
       cppHeaderOut: skipLanguages.contains(GeneratorLanguage.cpp)
           ? null
@@ -126,6 +133,7 @@ Future<int> generateTestPigeons({required String baseDir}) async {
       swiftOut: skipLanguages.contains(GeneratorLanguage.swift)
           ? null
           : '$outputBase/macos/Classes/$pascalCaseName.gen.swift',
+      swiftErrorClassName: swiftErrorClassName,
       suppressVersion: true,
       dartPackageName: 'pigeon_integration_tests',
     );
@@ -151,6 +159,7 @@ Future<int> generateTestPigeons({required String baseDir}) async {
       objcSourceOut: skipLanguages.contains(GeneratorLanguage.objc)
           ? null
           : '$alternateOutputBase/ios/Classes/$pascalCaseName.gen.m',
+      objcPrefix: input == 'core_tests' ? 'FLT' : '',
       suppressVersion: true,
       dartPackageName: 'pigeon_integration_tests',
     );
@@ -186,6 +195,7 @@ Future<int> runPigeon({
   String? kotlinErrorClassName,
   bool kotlinIncludeErrorClass = true,
   String? swiftOut,
+  String? swiftErrorClassName,
   String? cppHeaderOut,
   String? cppSourceOut,
   String? cppNamespace,
@@ -234,7 +244,9 @@ Future<int> runPigeon({
     objcSourceOut: objcSourceOut,
     objcOptions: ObjcOptions(prefix: objcPrefix),
     swiftOut: swiftOut,
-    swiftOptions: const SwiftOptions(),
+    swiftOptions: SwiftOptions(
+      errorClassName: swiftErrorClassName,
+    ),
     basePath: basePath,
     dartPackageName: dartPackageName,
   ));
