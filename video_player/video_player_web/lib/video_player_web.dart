@@ -136,6 +136,21 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
     return _player(textureId).setOptions(options);
   }
 
+  @override
+  Future<int> getMaxInstances(String mediaType) async {
+    return 10;
+  }
+
+  @override
+  void setBufferWindow(int textureId, int? seconds) {
+    // not implementable in web
+  }
+
+  @override
+  void setMaxResolution(int textureId, int width, int height) {
+    // not implementable in web
+  }
+
   // Retrieves a [VideoPlayer] by its internal `id`.
   // It must have been created earlier from the [create] method.
   VideoPlayer _player(int id) {
