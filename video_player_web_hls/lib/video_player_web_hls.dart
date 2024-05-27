@@ -159,8 +159,8 @@ class VideoPlayerPluginHls extends VideoPlayerPlatform {
 
   /// Returns the max instances of video controller of media type specified
   @override
-  Future<int> getMaxInstances(String mediaType) {
-    throw UnimplementedError('setMixWithOthers() has not been implemented.');
+  Future<int> getMaxInstances(String mediaType) async {
+    return 5;
   }
 
   // Retrieves a [VideoPlayer] by its internal `id`.
