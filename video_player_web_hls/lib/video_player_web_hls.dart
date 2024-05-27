@@ -150,10 +150,18 @@ class VideoPlayerPluginHls extends VideoPlayerPlatform {
   }
 
   /// Sets the buffer dimension
+  @override
   void setBufferWindow(int textureId, int? seconds) {}
 
   /// Sets the max resolution of the video
+  @override
   void setMaxResolution(int textureId, int width, int height) {}
+
+  /// Returns the max instances of video controller of media type specified
+  @override
+  Future<int> getMaxInstances(String mediaType) {
+    throw UnimplementedError('setMixWithOthers() has not been implemented.');
+  }
 
   // Retrieves a [VideoPlayer] by its internal `id`.
   // It must have been created earlier from the [create] method.
