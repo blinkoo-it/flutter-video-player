@@ -782,8 +782,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> changeVideoUrl(
     String url, {
     required bool playAfterChange,
+    required double volume,
   }) {
-    return _videoPlayerPlatform.changeVideoUrl(textureId, url, playAfterChange);
+    return _videoPlayerPlatform.changeVideoUrl(
+        textureId, url, playAfterChange, volume);
   }
 
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;

@@ -128,6 +128,7 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     int textureId,
     String url,
     bool playAfterChange,
+    double volume,
   ) {
     throw UnimplementedError('changeVideoUrl() has not been implemented.');
   }
