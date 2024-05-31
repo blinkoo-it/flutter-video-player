@@ -778,6 +778,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setMaxResolution(textureId, width, height);
   }
 
+  /// Change the URL of the current video. Available only on web platform
+  Future<void> changeVideoUrl(String url) {
+    return _videoPlayerPlatform.changeVideoUrl(textureId, url);
+  }
+
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;
 }
 
