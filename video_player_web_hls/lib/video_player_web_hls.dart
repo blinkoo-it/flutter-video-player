@@ -163,6 +163,11 @@ class VideoPlayerPluginHls extends VideoPlayerPlatform {
     return 5;
   }
 
+  @override
+  Future<void> changeVideoUrl(int textureId, String url) {
+    return _player(textureId).changeVideoUrl(url);
+  }
+
   // Retrieves a [VideoPlayer] by its internal `id`.
   // It must have been created earlier from the [create] method.
   VideoPlayer _player(int id) {

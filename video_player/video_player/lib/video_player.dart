@@ -349,7 +349,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// The URI to the video file. This will be in different formats depending on
   /// the [DataSourceType] of the original video.
-  final String dataSource;
+  String dataSource;
 
   /// HTTP headers used for the request to the [dataSource].
   /// Only for [VideoPlayerController.network].
@@ -436,8 +436,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
     }
 
-    _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
-        kUninitializedTextureId;
+    // TODO migliorare
+    _textureId = textureId == kUninitializedTextureId
+        ? (await _videoPlayerPlatform.create(dataSourceDescription)) ??
+            kUninitializedTextureId
+        : textureId;
     _creatingCompleter!.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
@@ -498,9 +501,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       }
     }
 
-    _eventSubscription = _videoPlayerPlatform
-        .videoEventsFor(_textureId)
-        .listen(eventListener, onError: errorListener);
+    if (_eventSubscription == null) {
+      // TODO change initializingCompleter to be a class property
+      _eventSubscription = _videoPlayerPlatform
+          .videoEventsFor(_textureId)
+          .listen(eventListener, onError: errorListener);
+    }
     return initializingCompleter.future;
   }
 
@@ -779,8 +785,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// Change the URL of the current video. Available only on web platform
-  Future<void> changeVideoUrl(String url) {
-    return _videoPlayerPlatform.changeVideoUrl(textureId, url);
+  Future<void> changeVideoUrl(String url) async {
+    dataSource = url;
+    await _videoPlayerPlatform.changeVideoUrl(textureId, url);
+    await initialize();
   }
 
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;

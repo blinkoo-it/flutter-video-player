@@ -56,7 +56,7 @@ class VideoPlayer {
   final web.HTMLVideoElement _videoElement;
   web.EventHandler? _onContextMenu;
 
-  final String uri;
+  String uri;
   final Map<String, String> headers;
 
   bool _isInitialized = false;
@@ -65,6 +65,8 @@ class VideoPlayer {
 
   /// Returns the [Stream] of [VideoEvent]s from the inner [html.VideoElement].
   Stream<VideoEvent> get events => _eventController.stream;
+
+  final List<StreamSubscription> _subscriptions = [];
 
   /// Initializes the wrapped [html.VideoElement].
   ///
@@ -79,10 +81,10 @@ class VideoPlayer {
 
     if (await shouldUseHlsLibrary()) {
       try {
-        _hls = Hls(
-          HlsConfig(
-            xhrSetup:
-              (web.XMLHttpRequest xhr, String _) {
+        if (_hls == null) {
+          _hls = Hls(
+            HlsConfig(
+              xhrSetup: (web.XMLHttpRequest xhr, String _) {
                 if (headers.isEmpty) {
                   return;
                 }
@@ -96,30 +98,37 @@ class VideoPlayer {
                   }
                 });
               }.toJS,
-          ),
-        );
-        _hls!.attachMedia(_videoElement);
-        _hls!.on('hlsMediaAttached', ((String _, JSObject __) {
-          _hls!.loadSource(uri.toString());
-        }.toJS));
-        _hls!.on('hlsError', (String _, JSObject data) {
-          try {
-            final ErrorData _data = ErrorData(data);
-            if (_data.fatal) {
-              _eventController.addError(PlatformException(
-                code: _kErrorValueToErrorName[2]!,
-                message: _data.type,
-                details: _data.details,
-              ));
-            }
-          } catch (e) {
-            debugPrint('Error parsing hlsError: $e');
-          }
-        }.toJS);
-        _videoElement.onCanPlay.listen((dynamic _) {
+            ),
+          );
+          _hls!.attachMedia(_videoElement);
+          _hls!.on(
+              'hlsMediaAttached',
+              ((String _, JSObject __) {
+                _hls!.loadSource(uri.toString());
+              }.toJS));
+          _hls!.on(
+              'hlsError',
+              (String _, JSObject data) {
+                try {
+                  final ErrorData _data = ErrorData(data);
+                  if (_data.fatal) {
+                    _eventController.addError(PlatformException(
+                      code: _kErrorValueToErrorName[2]!,
+                      message: _data.type,
+                      details: _data.details,
+                    ));
+                  }
+                } catch (e) {
+                  debugPrint('Error parsing hlsError: $e');
+                }
+              }.toJS);
+        }
+        final canPlaySub = _videoElement.onCanPlay.listen((dynamic _) {
+          debugPrint("ON CAN PLAY");
           _onVideoElementInitialization(_);
           setBuffering(false);
         });
+        _subscriptions.add(canPlaySub);
       } catch (e) {
         throw NoScriptTagException();
       }
@@ -134,21 +143,25 @@ class VideoPlayer {
       _videoElement.addEventListener('durationchange', onDurationChange);
     }
 
-    _videoElement.onCanPlayThrough.listen((dynamic _) {
+    final onCanPlayThroughSub =
+        _videoElement.onCanPlayThrough.listen((dynamic _) {
       setBuffering(false);
     });
+    _subscriptions.add(onCanPlayThroughSub);
 
-    _videoElement.onPlaying.listen((dynamic _) {
+    final onPlayingSub = _videoElement.onPlaying.listen((dynamic _) {
       setBuffering(false);
     });
+    _subscriptions.add(onPlayingSub);
 
-    _videoElement.onWaiting.listen((dynamic _) {
+    final onWaitingSub = _videoElement.onWaiting.listen((dynamic _) {
       setBuffering(true);
       _sendBufferingRangesUpdate();
     });
+    _subscriptions.add(onWaitingSub);
 
     // The error event fires when some form of error occurs while attempting to load or perform the media.
-    _videoElement.onError.listen((web.Event _) {
+    final onErrorSub = _videoElement.onError.listen((web.Event _) {
       setBuffering(false);
       // The Event itself (_) doesn't contain info about the actual error.
       // We need to look at the HTMLMediaElement.error.
@@ -160,11 +173,13 @@ class VideoPlayer {
         details: _kErrorValueToErrorDescription[error.code],
       ));
     });
+    _subscriptions.add(onErrorSub);
 
-    _videoElement.onEnded.listen((dynamic _) {
+    final onEndedSub = _videoElement.onEnded.listen((dynamic _) {
       setBuffering(false);
       _eventController.add(VideoEvent(eventType: VideoEventType.completed));
     });
+    _subscriptions.add(onEndedSub);
   }
 
   /// Attempts to play the video.
@@ -335,9 +350,9 @@ class VideoPlayer {
   bool canPlayHlsNatively() {
     bool canPlayHls = false;
     try {
-      final String canPlayType = _videoElement.canPlayType('application/vnd.apple.mpegurl');
-      canPlayHls =
-          canPlayType != '';
+      final String canPlayType =
+          _videoElement.canPlayType('application/vnd.apple.mpegurl');
+      canPlayHls = canPlayType != '';
     } catch (e) {}
     return canPlayHls;
   }
@@ -424,5 +439,21 @@ class VideoPlayer {
       _onContextMenu = null;
     }
     _videoElement.removeAttribute('disableRemotePlayback');
+  }
+
+  Future<void> changeVideoUrl(String url) async {
+    debugPrint("CHANGE VIDEO");
+    // remove all subscriptions
+    for (StreamSubscription sub in _subscriptions) {
+      await sub.cancel();
+    }
+    _subscriptions.clear();
+
+    uri = url;
+    // reset video player state
+    _isInitialized = false;
+    _isBuffering = false;
+
+    await initialize();
   }
 }
