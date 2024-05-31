@@ -124,12 +124,7 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   }
 
   /// Change the URL of the current video. Available only on web platform
-  Future<void> changeVideoUrl(
-    int textureId,
-    String url,
-    bool playAfterChange,
-    double volume,
-  ) {
+  Future<void> changeVideoUrl(int textureId, String url) {
     throw UnimplementedError('changeVideoUrl() has not been implemented.');
   }
 }

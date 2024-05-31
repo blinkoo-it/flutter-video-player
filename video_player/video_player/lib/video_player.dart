@@ -779,13 +779,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// Change the URL of the current video. Available only on web platform
-  Future<void> changeVideoUrl(
-    String url, {
-    required bool playAfterChange,
-    required double volume,
-  }) {
-    return _videoPlayerPlatform.changeVideoUrl(
-        textureId, url, playAfterChange, volume);
+  Future<void> changeVideoUrl(String url) {
+    return _videoPlayerPlatform.changeVideoUrl(textureId, url);
   }
 
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;
