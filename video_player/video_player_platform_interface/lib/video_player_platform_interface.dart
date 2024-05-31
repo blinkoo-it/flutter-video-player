@@ -120,7 +120,12 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
 
   /// Sets the max resolution of the video
   void setMaxResolution(int textureId, int width, int height) {
-    throw UnimplementedError('setBufferWindow() has not been implemented.');
+    throw UnimplementedError('setMaxResolution() has not been implemented.');
+  }
+
+  /// Change the URL of the current video. Available only on web platform
+  Future<void> changeVideoUrl(int textureId, String url) {
+    throw UnimplementedError('changeVideoUrl() has not been implemented.');
   }
 }
 
