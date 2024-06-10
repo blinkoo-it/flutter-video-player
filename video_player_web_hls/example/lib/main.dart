@@ -16,7 +16,6 @@ class _VideoAppState extends State<VideoApp> {
 
   bool isPlayerInitialized = false;
   bool firstInit = true;
-  double playerVolume = 0.0;
 
   @override
   void initState() {
@@ -24,7 +23,7 @@ class _VideoAppState extends State<VideoApp> {
     try {
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(
-            'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8'),
+            'https://crushtravelams-euwe.streaming.media.azure.net/94e4050e-2c68-4da6-9436-ae733f0b188f/1.ism/manifest(format=m3u8-cmaf)'),
       )..initialize().then((_) {
           // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
           setState(() {});
@@ -92,18 +91,10 @@ class _VideoAppState extends State<VideoApp> {
     _controller.setVolume(_controller.value.volume == 0 ? 0.5 : 0);
   }
 
-  Future<void> changeUrl(String? url, {bool firstRequest = true}) async {
-    debugPrint("CAMBIO URL - firstRequest $firstRequest");
-    if (firstRequest) {
-      playerVolume = _controller.value.volume;
-    }
-    _controller.setVolume(0.0);
+  Future<void> changeUrl(String? url) async {
+    debugPrint("CAMBIO URL");
     await _controller.changeVideoUrl(url ?? _controller.dataSource);
 
-    if (!firstRequest) {
-      _controller.setVolume(playerVolume);
-      setState(() {});
-    }
   }
 
   void eventListener() {
@@ -118,11 +109,7 @@ class _VideoAppState extends State<VideoApp> {
           "CONTROLLER CHANGE INITIALIZED - ${_controller.value.isInitialized}",
         );
         if (isPlayerInitialized) {
-          debugPrint("PLAY - $playerVolume");
-          _controller.setVolume(playerVolume);
           _controller.play();
-        } else {
-          changeUrl(null, firstRequest: false);
         }
         firstInit = false;
       }
