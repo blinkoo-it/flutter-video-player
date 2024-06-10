@@ -378,6 +378,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   StreamSubscription<dynamic>? _eventSubscription;
   _VideoAppLifeCycleObserver? _lifeCycleObserver;
 
+  Completer<void>? _initializingCompleter;
+
   /// The id of a texture that hasn't been initialized.
   @visibleForTesting
   static const int kUninitializedTextureId = -1;
@@ -442,7 +444,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             kUninitializedTextureId
         : textureId;
     _creatingCompleter!.complete(null);
-    final Completer<void> initializingCompleter = Completer<void>();
+    _initializingCompleter = Completer<void>();
 
     void eventListener(VideoEvent event) {
       if (_isDisposed) {
@@ -459,7 +461,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             errorDescription: null,
             isCompleted: false,
           );
-          initializingCompleter.complete(null);
+          _initializingCompleter?.complete(null);
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
@@ -496,8 +498,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       final PlatformException e = obj as PlatformException;
       value = VideoPlayerValue.erroneous(e.message!);
       _timer?.cancel();
-      if (!initializingCompleter.isCompleted) {
-        initializingCompleter.completeError(obj);
+      if (!_initializingCompleter!.isCompleted) {
+        _initializingCompleter!.completeError(obj);
       }
     }
 
@@ -507,7 +509,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           .videoEventsFor(_textureId)
           .listen(eventListener, onError: errorListener);
     }
-    return initializingCompleter.future;
+    return _initializingCompleter!.future;
   }
 
   @override

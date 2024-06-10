@@ -8,8 +8,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:http/http.dart' as http;
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:video_player_web_hls/hls.dart';
 import 'package:video_player_web_hls/no_script_tag_exception.dart';
 import 'package:video_player_web_hls/src/pkg_web_tweaks.dart';
@@ -122,7 +122,10 @@ class VideoPlayer {
                   debugPrint('Error parsing hlsError: $e');
                 }
               }.toJS);
+        } else {
+          _hls!.loadSource(uri.toString());
         }
+
         final canPlaySub = _videoElement.onCanPlay.listen((dynamic _) {
           debugPrint("ON CAN PLAY");
           _onVideoElementInitialization(_);
