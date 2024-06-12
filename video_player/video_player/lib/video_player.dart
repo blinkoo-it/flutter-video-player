@@ -790,6 +790,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> changeVideoUrl(String url) async {
     dataSource = url;
     await _videoPlayerPlatform.changeVideoUrl(textureId, url);
+    value = const VideoPlayerValue(duration: Duration.zero);
     await initialize();
   }
 
