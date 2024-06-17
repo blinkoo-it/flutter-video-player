@@ -23,14 +23,15 @@ class _VideoAppState extends State<VideoApp> {
     try {
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(
-            'https://crushtravelams-euwe.streaming.media.azure.net/94e4050e-2c68-4da6-9436-ae733f0b188f/1.ism/manifest(format=m3u8-cmaf)'),
+            // 'https://crushtravelams-euwe.streaming.media.azure.net/94e4050e-2c68-4da6-9436-ae733f0b188f/1.ism/manifest(format=m3u8-cmaf)',
+            'https://dev-cdn.blinkoo.com/asset-74449a0b-b723-4071-a275-f8231864e2a8/webm/c4f526dd-3665-4af3-b9bf-d36aebdb2c15_v1080.webm'),
       )..initialize().then((_) {
           // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
           setState(() {});
         });
+      _controller.setVolume(0.0);
       _controller.setLooping(true);
       _controller.addListener(eventListener);
-      _controller.setVolume(0.0);
     } catch (e) {
       print(e);
     }
@@ -47,12 +48,10 @@ class _VideoAppState extends State<VideoApp> {
           ),
         ),
         body: Center(
-          child: _controller.value.isInitialized
-              ? AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller, key: key),
-                )
-              : Container(),
+          child: AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller, key: key),
+          ),
         ),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -94,7 +93,6 @@ class _VideoAppState extends State<VideoApp> {
   Future<void> changeUrl(String? url) async {
     debugPrint("CAMBIO URL");
     await _controller.changeVideoUrl(url ?? _controller.dataSource);
-
   }
 
   void eventListener() {

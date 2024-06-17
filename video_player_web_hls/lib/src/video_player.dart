@@ -79,6 +79,21 @@ class VideoPlayer {
       ..controls = false
       ..playsInline = true;
 
+    final canPlaySub = _videoElement.onCanPlay.listen((dynamic _) {
+      debugPrint("ON CAN PLAY");
+      _onVideoElementInitialization(_);
+      setBuffering(false);
+    });
+    _subscriptions.add(canPlaySub);
+
+    // Needed for Safari iOS 17, which may not send `canplay`.
+    final onLoadedSub = _videoElement.onLoadedMetadata.listen((dynamic _) {
+      debugPrint("ON LOADED METADATA");
+      _onVideoElementInitialization(_);
+      setBuffering(false);
+    });
+    _subscriptions.add(onLoadedSub);
+
     if (await shouldUseHlsLibrary()) {
       try {
         if (_hls == null) {
@@ -125,25 +140,11 @@ class VideoPlayer {
         } else {
           _hls!.loadSource(uri.toString());
         }
-
-        final canPlaySub = _videoElement.onCanPlay.listen((dynamic _) {
-          debugPrint("ON CAN PLAY");
-          _onVideoElementInitialization(_);
-          setBuffering(false);
-        });
-        _subscriptions.add(canPlaySub);
       } catch (e) {
         throw NoScriptTagException();
       }
     } else {
       _videoElement.src = uri.toString();
-      final onDurationChange = (web.Event event) {
-        if (_videoElement.duration == 0) {
-          return;
-        }
-        _onVideoElementInitialization(event);
-      }.toJS;
-      _videoElement.addEventListener('durationchange', onDurationChange);
     }
 
     final onCanPlayThroughSub =
