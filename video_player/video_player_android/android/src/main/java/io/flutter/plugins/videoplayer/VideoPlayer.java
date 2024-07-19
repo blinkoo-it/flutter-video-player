@@ -148,7 +148,7 @@ final class VideoPlayer {
    int maxBufferMs = seconds != null ? seconds.intValue() * 1000 : DefaultLoadControl.DEFAULT_MAX_BUFFER_MS;
    builder.setBufferDurationsMs(
            DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-           maxBufferMs,
+           Math.max(maxBufferMs,DefaultLoadControl.DEFAULT_MIN_BUFFER_MS),
            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
    );
