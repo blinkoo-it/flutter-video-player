@@ -336,10 +336,10 @@ final class VideoPlayer {
    DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder();
    int maxBufferMs = seconds != null ? seconds.intValue() * 1000 : DefaultLoadControl.DEFAULT_MAX_BUFFER_MS;
    builder.setBufferDurationsMs(
-           DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+           2000,
            maxBufferMs,
-           DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
-           DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+           2000,
+           2000
    );
    loadControl.setInternalLoadControl(builder.build());
   }
