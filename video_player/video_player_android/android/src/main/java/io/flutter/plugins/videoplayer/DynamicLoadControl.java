@@ -1,12 +1,12 @@
 package io.flutter.plugins.videoplayer;
 
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.Renderer;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
-import com.google.android.exoplayer2.upstream.Allocator;
+import androidx.annotation.NonNull;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.LoadControl;
+import androidx.media3.exoplayer.upstream.Allocator;
 
+@UnstableApi
 public class DynamicLoadControl implements LoadControl {
     LoadControl internalLoadControl;
 
@@ -17,18 +17,11 @@ public class DynamicLoadControl implements LoadControl {
     public void setInternalLoadControl(LoadControl internalLoadControl) {
         this.internalLoadControl = internalLoadControl;
     }
-
-
     // LoadControl method implementations
 
     @Override
     public void onPrepared() {
         internalLoadControl.onPrepared();
-    }
-
-    @Override
-    public void onTracksSelected(Renderer[] renderers, TrackGroupArray trackGroups, ExoTrackSelection[] trackSelections) {
-        internalLoadControl.onTracksSelected(renderers, trackGroups, trackSelections);
     }
 
     @Override
@@ -42,6 +35,7 @@ public class DynamicLoadControl implements LoadControl {
     }
 
     @Override
+    @NonNull
     public Allocator getAllocator() {
         return internalLoadControl.getAllocator();
     }
@@ -59,10 +53,5 @@ public class DynamicLoadControl implements LoadControl {
     @Override
     public boolean shouldContinueLoading(long playbackPositionUs, long bufferedDurationUs, float playbackSpeed) {
         return internalLoadControl.shouldContinueLoading(playbackPositionUs, bufferedDurationUs, playbackSpeed);
-    }
-
-    @Override
-    public boolean shouldStartPlayback(long bufferedDurationUs, float playbackSpeed, boolean rebuffering, long targetLiveOffsetUs) {
-        return internalLoadControl.shouldStartPlayback(bufferedDurationUs, playbackSpeed, rebuffering, targetLiveOffsetUs);
     }
 }

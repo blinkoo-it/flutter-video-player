@@ -4,14 +4,14 @@
 
 package io.flutter.plugins.videoplayer;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.util.LongSparseArray;
 import androidx.annotation.NonNull;
-
-import com.google.android.exoplayer2.mediacodec.MediaCodecInfo;
-import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
-import com.google.android.exoplayer2.util.MimeTypes;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.mediacodec.MediaCodecInfo;
+import androidx.media3.exoplayer.mediacodec.MediaCodecUtil;
 
 import io.flutter.FlutterInjector;
 import io.flutter.Log;
@@ -29,13 +29,11 @@ import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
 import io.flutter.view.TextureRegistry;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-
 import javax.net.ssl.HttpsURLConnection;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
+@UnstableApi
 public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   private static final String TAG = "VideoPlayerPlugin";
   private final LongSparseArray<VideoPlayer> videoPlayers = new LongSparseArray<>();
@@ -45,32 +43,22 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   /** Register this with the v2 embedding for the plugin to respond to lifecycle callbacks. */
   public VideoPlayerPlugin() {}
 
-  @SuppressWarnings("deprecation")
-  private VideoPlayerPlugin(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    this.flutterState =
-        new FlutterState(
-            registrar.context(),
-            registrar.messenger(),
-            registrar::lookupKeyForAsset,
-            registrar::lookupKeyForAsset,
-            registrar.textures());
-    flutterState.startListening(this, registrar.messenger());
-  }
-
-  /** Registers this with the stable v1 embedding. Will not respond to lifecycle events. */
-  @SuppressWarnings("deprecation")
-  public static void registerWith(
-      @NonNull io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    final VideoPlayerPlugin plugin = new VideoPlayerPlugin(registrar);
-    registrar.addViewDestroyListener(
-        view -> {
-          plugin.onDestroy();
-          return false; // We are not interested in assuming ownership of the NativeView.
-        });
-  }
-
+  @SuppressLint("ObsoleteSdkInt")
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+      try {
+        HttpsURLConnection.setDefaultSSLSocketFactory(new CustomSSLSocketFactory());
+      } catch (KeyManagementException | NoSuchAlgorithmException e) {
+        Log.w(
+            TAG,
+            "Failed to enable TLSv1.1 and TLSv1.2 Protocols for API level 19 and below.\n"
+                + "For more information about Socket Security, please consult the following link:\n"
+                + "https://developer.android.com/reference/javax/net/ssl/SSLSocket",
+            e);
+      }
+    }
+
     final FlutterInjector injector = FlutterInjector.instance();
     this.flutterState =
         new FlutterState(
@@ -119,7 +107,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
         new EventChannel(
             flutterState.binaryMessenger, "flutter.io/videoPlayer/videoEvents" + handle.id());
 
-    VideoPlayer player;
+    final VideoAsset videoAsset;
     if (arg.getAsset() != null) {
       String assetLookupKey;
       if (arg.getPackageName() != null) {
@@ -128,28 +116,34 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       } else {
         assetLookupKey = flutterState.keyForAsset.get(arg.getAsset());
       }
-      player =
-          new VideoPlayer(
-              flutterState.applicationContext,
-              eventChannel,
-              handle,
-              "asset:///" + assetLookupKey,
-              null,
-              new HashMap<>(),
-              options);
+      videoAsset = VideoAsset.fromAssetUrl("asset:///" + assetLookupKey);
     } else {
       Map<String, String> httpHeaders = arg.getHttpHeaders();
-      player =
-          new VideoPlayer(
-              flutterState.applicationContext,
-              eventChannel,
-              handle,
-              arg.getUri(),
-              arg.getFormatHint(),
-              httpHeaders,
-              options);
+      VideoAsset.StreamingFormat streamingFormat = VideoAsset.StreamingFormat.UNKNOWN;
+      String formatHint = arg.getFormatHint();
+      if (formatHint != null) {
+        switch (formatHint) {
+          case "ss":
+            streamingFormat = VideoAsset.StreamingFormat.SMOOTH;
+            break;
+          case "dash":
+            streamingFormat = VideoAsset.StreamingFormat.DYNAMIC_ADAPTIVE;
+            break;
+          case "hls":
+            streamingFormat = VideoAsset.StreamingFormat.HTTP_LIVE;
+            break;
+        }
+      }
+      videoAsset = VideoAsset.fromRemoteUrl(arg.getUri(), streamingFormat, arg.getHttpHeaders());
     }
-    videoPlayers.put(handle.id(), player);
+    videoPlayers.put(
+        handle.id(),
+        VideoPlayer.create(
+            flutterState.applicationContext,
+            VideoPlayerEventCallbacks.bindTo(eventChannel),
+            handle,
+            videoAsset,
+            options));
 
     return new TextureMessage.Builder().setTextureId(handle.id()).build();
   }
