@@ -166,7 +166,7 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<int> getMaxInstances(String mediaType) async {
-    return 10;
+    return 25;
   }
 
   @override
