@@ -20,7 +20,7 @@ dependencies:
     git:
       url: https://github.com/blinkoo-it/flutter-video-player
       path: video_player/video_player_platform_interface
-      ref: 2.8.6+8
+      ref: 2.8.6+9
 
 dev_dependencies:
   flutter_test:
