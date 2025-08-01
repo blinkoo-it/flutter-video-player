@@ -835,6 +835,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _videoPlayerPlatform.setMaxResolution(playerId, width, height);
   }
 
+  void changeVideoUrl(String url) {}
+
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;
 }
 
