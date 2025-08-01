@@ -134,6 +134,8 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     // throw UnimplementedError('setMaxResolution() has not been implemented.');
   }
 
+  void changeVideoUrl(String url) {}
+
   // END BLINKOO PART
 }
 
