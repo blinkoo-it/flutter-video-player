@@ -470,10 +470,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _creatingCompleter!.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
-    _playerId =
-        (await _videoPlayerPlatform.createWithOptions(creationOptions)) ??
-            kUninitializedPlayerId;
-    _creatingCompleter!.complete(null);
+    // _playerId =
+    //     (await _videoPlayerPlatform.createWithOptions(creationOptions)) ??
+    //         kUninitializedPlayerId;
+    // _creatingCompleter!.complete(null);
 
     // // Apply the web-specific options
     // if (kIsWeb && videoPlayerOptions?.webOptions != null) {
